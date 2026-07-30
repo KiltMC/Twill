@@ -1,0 +1,22 @@
+[versions]
+# https://fabricmc.net/develop/
+fabric-loom = "1.17.+"
+fabric-loader = "0.19.3"
+
+# https://stonecutter.kikugie.dev/
+stonecutter = "0.9.+"
+# https://stonecutter.kikugie.dev/wiki/fletching-table/setup
+fletching-table = "0.1.0-alpha.22"
+
+# https://modrinth.com/mod/fabric-language-kotlin
+fabric-kotlin = "1.13.13+kotlin.2.4.10"
+
+[libraries]
+fabric-loader = { module = "net.fabricmc:fabric-loader", version.ref = "fabric-loader" }
+fabric-kotlin = { module = "net.fabricmc:fabric-language-kotlin", version.ref = "fabric-kotlin" }
+
+[plugins]
+fabric-loom = { id = "net.fabricmc.fabric-loom", version.ref = "fabric-loom" }
+kotlin = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+fletching-table = { id = "dev.kikugie.fletching-table", version.ref = "fletching-table" }
+
