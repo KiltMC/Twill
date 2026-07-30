@@ -1,9 +1,13 @@
+# refer to https://github.com/neoforged/NeoForge/blob/26.2.x/gradle.properties for FML version
+
 ["26.1.2"]
 supported_versions = "26.1,26.1.1,26.1.2"
 mc_version_range = "~26.1"
 fabric_api = "0.155.2+26.1.2"
+fml = "11"
 
 ["26.2"]
 supported_versions = "26.2"
 mc_version_range = "~26.2"
 fabric_api = "0.156.0+26.2"
+fml = "11"

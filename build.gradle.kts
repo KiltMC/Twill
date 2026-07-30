@@ -2,16 +2,31 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "2.4.10"
-    id("net.fabricmc.fabric-loom") version "1.17-SNAPSHOT"
-    id("maven-publish")
+    alias(libs.plugins.kotlin)
+    alias(libs.plugins.fabric.loom)
+    alias(libs.plugins.fletching.table)
+    `maven-publish`
 }
 
-version = project.property("mod_version") as String
-group = project.property("maven_group") as String
+val fmlVersion = property("fml") as String
+
+version = "${rootProject.property("mod_version")}+${stonecutter.current.version}"
+group = rootProject.property("maven_group") as String
 
 base {
     archivesName.set(project.property("archives_base_name") as String)
+}
+
+sourceSets {
+    getByName("main") {
+        java.srcDir("src/main/java")
+        java.srcDir("src/main/kotlin")
+
+        java.srcDir(rootProject.file("fml/v$fmlVersion/loader/src/main/java"))
+
+        resources.srcDir("src/main/resources")
+        resources.srcDir(rootProject.file("fml/v$fmlVersion/loader/src/main/resources"))
+    }
 }
 
 val targetJavaVersion = 25
@@ -23,37 +38,33 @@ java {
     withSourcesJar()
 }
 
-
-
 repositories {
-    // Add repositories to retrieve artifacts from in here.
-    // You should only use this when depending on other mods because
-    // Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
-    // See https://docs.gradle.org/current/userguide/declaring_repositories.html
-    // for more information about repositories.
+    maven("https://maven.neoforged.net/releases")
 }
 
 dependencies {
     // To change the versions see the gradle.properties file
-    minecraft("com.mojang:minecraft:${project.property("minecraft_version")}")
-    implementation("net.fabricmc:fabric-loader:${project.property("loader_version")}")
-    implementation("net.fabricmc:fabric-language-kotlin:${project.property("kotlin_loader_version")}")
+    minecraft("com.mojang:minecraft:${stonecutter.current.version}")
+    implementation(libs.fabric.loader)
+    implementation(libs.fabric.kotlin)
 
-    implementation("net.fabricmc.fabric-api:fabric-api:${project.property("fabric_version")}")
+    implementation("net.fabricmc.fabric-api:fabric-api:${property("fabric_api")}")
+    implementation(libs.eventbus)
+    include(libs.eventbus)
 }
 
 tasks.processResources {
     inputs.property("version", project.version)
-    inputs.property("minecraft_version", project.property("minecraft_version"))
+    inputs.property("minecraft_version", stonecutter.current.version)
     inputs.property("loader_version", project.property("loader_version"))
     filteringCharset = "UTF-8"
 
     filesMatching("fabric.mod.json") {
         expand(
             "version" to project.version,
-            "minecraft_version" to project.property("minecraft_version"),
-            "loader_version" to project.property("loader_version"),
-            "kotlin_loader_version" to project.property("kotlin_loader_version")
+            "minecraft_version" to stonecutter.current.version,
+            "loader_version" to libs.versions.fabric.loader.get(),
+            "kotlin_loader_version" to libs.versions.fabric.kotlin.get(),
         )
     }
 }

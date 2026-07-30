@@ -7,7 +7,9 @@
     "authors": [
         "BluSpring"
     ],
-    "contact": {},
+    "contact": {
+        "sources": "https://github.com/KiltMC/Twill"
+    },
     "license": "LGPL-2.1-only",
     "icon": "assets/twill/icon.png",
     "environment": "*",

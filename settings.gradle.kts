@@ -28,4 +28,6 @@ stonecutter {
     }
 }
 
+includeBuild("knit-loader")
+
 rootProject.name = "Twill"
