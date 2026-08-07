@@ -65,6 +65,7 @@ dependencies {
     api(include("org.apache.maven:maven-artifact:${fmlProperties.getProperty("apache_maven_artifact_version")}")!!)
     api(include("com.electronwill.night-config:core:${fmlProperties.getProperty("nightconfig_version")}")!!)
     api(include("com.electronwill.night-config:toml:${fmlProperties.getProperty("nightconfig_version")}")!!)
+    api(include(fletchingTable.modrinth("modmenu-badges-lib", stonecutter.current.version, "fabric"))!!)
 
     implementation(libs.knit.loader.fabric)
     include(libs.bundles.knit.loader)
