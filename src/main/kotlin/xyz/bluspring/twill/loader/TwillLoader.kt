@@ -6,6 +6,7 @@ import net.fabricmc.loader.api.FabricLoader
 import net.neoforged.fml.jarcontents.JarContents
 import net.neoforged.fml.jarcontents.JarFileContents
 import net.neoforged.fml.loading.FMLLoader
+import net.neoforged.fml.loading.LanguageProviderLoader
 import net.neoforged.fml.loading.moddiscovery.ModDiscoverer
 import net.neoforged.fml.loading.moddiscovery.ModFile
 import net.neoforged.fml.loading.moddiscovery.ModFileParser
@@ -17,6 +18,7 @@ import net.neoforged.jarjar.selection.JarSelector
 import net.neoforged.neoforgespi.language.IModInfo
 import net.neoforged.neoforgespi.locating.IModFile
 import net.neoforged.neoforgespi.locating.ModFileDiscoveryAttributes
+import org.apache.maven.artifact.versioning.DefaultArtifactVersion
 import xyz.bluspring.knit.loader.KnitModLoader
 import xyz.bluspring.knit.loader.mod.ModDefinition
 import xyz.bluspring.knit.loader.mod.ModDependency
@@ -29,9 +31,7 @@ import xyz.bluspring.twill.loader.knit.NeoForgeVersionConstraint
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.*
-import kotlin.io.path.extension
-import kotlin.io.path.isDirectory
-import kotlin.io.path.name
+import kotlin.io.path.*
 
 open class TwillLoader(id: String = "twill") : KnitModLoader<NeoForgeMod>(id, "neoforge") {
     init {
@@ -96,6 +96,19 @@ open class TwillLoader(id: String = "twill") : KnitModLoader<NeoForgeMod>(id, "n
         get() = (this as? ModFile)?.mixinConfigs ?: emptyList()
 
     private fun IModFile.asKnitDefinitions(parent: IModFile?): List<ModDefinition> {
+        if (this.type != IModFile.Type.MOD && this.modInfos.isEmpty()) {
+            return listOf(
+                ModDefinition(this.filePath, this.id, this.fileName, version = NeoForgeModVersion(DefaultArtifactVersion(this.modFileInfo.versionString() ?: "0.0.0-unknown")), license = this.modFileInfo.license,
+                    additionalData = mapOf(
+                        "file" to this,
+                    ),
+                    loaderCustomData = mapOf(
+                        "badges" to listOf("library"), // force ModMenu to hide this
+                    )
+                )
+            )
+        }
+
         return this.modInfos.map { info ->
             ModDefinition(this.filePath, info.modId, info.displayName, info.description,
                 NeoForgeModVersion(info.version),
@@ -177,6 +190,62 @@ open class TwillLoader(id: String = "twill") : KnitModLoader<NeoForgeMod>(id, "n
         return modFile
     }
 
+    private fun tryGetModFiles(jar: JarContents, attributes: ModFileDiscoveryAttributes): Collection<IModFile> {
+        val modFile = tryGetModFile(jar, attributes)
+
+        if (modFile != null) {
+            val files = mutableListOf<IModFile>()
+            files.add(modFile)
+
+            val jarJar = JarSelector.detectAndSelect(listOf(modFile), { modFile, relativePath ->
+                try {
+                    Optional.ofNullable(modFile.contents.openFile(relativePath))
+                } catch (e: Throwable) {
+                    Twill.logger.error("Failed to load resource $relativePath from mod ${modFile.fileName}!", e)
+                    Optional.empty()
+                }
+            }, { file, path ->
+                if (!jijPath.exists())
+                    jijPath.createDirectories()
+
+                val tempFile = Files.createTempFile(jijPath, "_jij", ".tmp")
+                val finalPath = try {
+                    val checksum = JarInJarDependencyLocator.extractEmbeddedJarFile(file, path, tempFile)
+                    val fileName = path.substring(path.lastIndexOf('/') + 1)
+                    val final = jijPath.resolve("$checksum/$fileName")
+                    if (!Files.isRegularFile(final))
+                        JarInJarDependencyLocator.moveExtractedFileIntoPlace(tempFile, final)
+
+                    final
+                } finally {
+                    Files.deleteIfExists(tempFile)
+                }
+
+                val jar = JarContents.ofPath(finalPath)
+                Optional.ofNullable(tryGetModFile(jar, attributes.withParent(modFile)))
+            }, { file ->
+                if (file.modFileInfo == null)
+                    file.fileName
+                else if (file.modInfos.isEmpty())
+                    "library:${file.id}"
+                else
+                    file.modInfos.joinToString { it.modId }
+            }, { errors ->
+                val error = RuntimeException("Failed to load JiJ data in mod file ${modFile.fileName}!")
+                for (errorInfo in errors) {
+                    error.addSuppressed(RuntimeException("${errorInfo.identifier()} -> ${errorInfo.failureReason()}"))
+                }
+
+                error
+            })
+            files.addAll(jarJar)
+
+            return files
+        }
+
+        return emptyList()
+    }
+
     private val jijPath = FabricLoader.getInstance().gameDir.resolve(".twill/extractedMods")
 
     override fun collectAdditionalModDefinitions(gameDir: Path): Collection<ModDefinition> {
@@ -215,57 +284,14 @@ open class TwillLoader(id: String = "twill") : KnitModLoader<NeoForgeMod>(id, "n
         } else true
 
         // This mod isn't a Twill-supported mod JAR, we should skip it.
-        if (!isTwillMod)
+        if (!isTwillMod && parent == null)
             return emptyList()
 
         val definitions = mutableListOf<ModDefinition>()
         val attributes = ModFileDiscoveryAttributes.DEFAULT.withParent(parent)
-        val modFile = tryGetModFile(jar, attributes)
+        val modFiles = tryGetModFiles(jar, attributes)
 
-        if (modFile != null) {
-            definitions.addAll(modFile.asKnitDefinitions(parent))
-
-            val jarJar = JarSelector.detectAndSelect(listOf(modFile), { modFile, relativePath ->
-                try {
-                    Optional.ofNullable(modFile.contents.openFile(relativePath))
-                } catch (e: Throwable) {
-                    Twill.logger.error("Failed to load  resource $relativePath from mod ${modFile.fileName}!", e)
-                    Optional.empty()
-                }
-            }, { file, path ->
-                val tempFile = Files.createTempFile(jijPath, "_jij", ".tmp")
-                val finalPath = try {
-                    val checksum = JarInJarDependencyLocator.extractEmbeddedJarFile(file, path, tempFile)
-                    val fileName = path.substring(path.lastIndexOf('/') + 1)
-                    val final = jijPath.resolve("$checksum/$fileName")
-                    if (!Files.isRegularFile(final))
-                        JarInJarDependencyLocator.moveExtractedFileIntoPlace(tempFile, final)
-
-                    final
-                } finally {
-                    Files.deleteIfExists(tempFile)
-                }
-
-                val jar = JarContents.ofPath(finalPath)
-                Optional.ofNullable(tryGetModFile(jar, attributes.withParent(modFile)))
-            }, { file ->
-                if (file.modFileInfo == null)
-                    file.fileName
-                else if (file.modInfos.isEmpty())
-                    "library:${file.id}"
-                else
-                    file.modInfos.joinToString { it.modId }
-            }, { errors ->
-                val error = RuntimeException("Failed to load JiJ data in mod file ${modFile.fileName}!")
-                for (errorInfo in errors) {
-                    error.addSuppressed(RuntimeException("${errorInfo.identifier()} -> ${errorInfo.failureReason()}"))
-                }
-
-                error
-            })
-
-            definitions.addAll(jarJar.flatMap { it.asKnitDefinitions(modFile) })
-        }
+        definitions.addAll(modFiles.flatMap { it.asKnitDefinitions(it.discoveryAttributes.parent) })
 
         for (definition in definitions) {
             this.loadedModIds.add(definition.id)
@@ -281,5 +307,17 @@ open class TwillLoader(id: String = "twill") : KnitModLoader<NeoForgeMod>(id, "n
             emptyList()
         ))
         return mods
+    }
+
+    override fun finishModScanning() {
+        super.finishModScanning()
+
+        // This process was moved from FMLLoader.create
+        val fml = FMLLoader.getCurrent()
+        fml.loadPlugins(fml.loadingModList.plugins)
+        fml.languageProviderLoader = LanguageProviderLoader(fml.LaunchContextAdapter(), )
+        for (file in fml.loadingModList.allModFiles) {
+            (file as ModFile).identifyLanguage()
+        }
     }
 }

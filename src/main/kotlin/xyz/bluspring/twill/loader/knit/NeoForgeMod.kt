@@ -7,5 +7,5 @@ import xyz.bluspring.knit.loader.mod.ModDefinition
 
 class NeoForgeMod(definition: ModDefinition) : KnitMod(definition) {
     val modFile: IModFile = definition.additionalData["file"] as IModFile
-    val modFileInfo: IModInfo = definition.additionalData["info"] as IModInfo
+    val modInfo: IModInfo? = definition.additionalData["info"] as? IModInfo
 }

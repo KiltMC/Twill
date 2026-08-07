@@ -44,6 +44,7 @@ repositories {
     maven("https://maven.florianreuth.de/snapshots")
     maven("https://maven.bawnorton.com/releases")
     maven("https://maven.enjarai.dev/mirrors")
+    maven("https://api.modrinth.com/maven")
 }
 
 dependencies {
