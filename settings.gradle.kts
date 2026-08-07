@@ -28,6 +28,11 @@ stonecutter {
     }
 }
 
-includeBuild("knit-loader")
+includeBuild("knit-loader") {
+    dependencySubstitution {
+        substitute(module("xyz.bluspring.knit-loader:knit-loader-fabric"))
+            .using(project(":fabric"))
+    }
+}
 
 rootProject.name = "Twill"

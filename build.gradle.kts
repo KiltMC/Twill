@@ -1,5 +1,6 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import java.util.*
 
 plugins {
     alias(libs.plugins.kotlin)
@@ -40,6 +41,9 @@ java {
 
 repositories {
     maven("https://maven.neoforged.net/releases")
+    maven("https://maven.florianreuth.de/snapshots")
+    maven("https://maven.bawnorton.com/releases")
+    maven("https://maven.enjarai.dev/mirrors")
 }
 
 dependencies {
@@ -49,15 +53,28 @@ dependencies {
     implementation(libs.fabric.kotlin)
 
     implementation("net.fabricmc.fabric-api:fabric-api:${property("fabric_api")}")
-    implementation(libs.eventbus)
-    include(libs.eventbus)
+
+    val fmlProperties = Properties()
+    fmlProperties.load(rootProject.file("fml/v$fmlVersion/gradle.properties").inputStream())
+    api(include("net.neoforged:bus:${fmlProperties.getProperty("eventbus_version")}")!!)
+    api(include("net.neoforged:accesstransformers:${fmlProperties.getProperty("accesstransformers_version")}")!!)
+    api(include("net.neoforged:mergetool:${fmlProperties.getProperty("mergetool_version")}")!!)
+    api(include("net.neoforged:JarJarSelector:${fmlProperties.getProperty("jarjar_version")}")!!)
+    api(include("net.neoforged:JarJarMetadata:${fmlProperties.getProperty("jarjar_version")}")!!)
+    api(include("org.apache.maven:maven-artifact:${fmlProperties.getProperty("apache_maven_artifact_version")}")!!)
+    api(include("com.electronwill.night-config:core:${fmlProperties.getProperty("nightconfig_version")}")!!)
+    api(include("com.electronwill.night-config:toml:${fmlProperties.getProperty("nightconfig_version")}")!!)
+
+    implementation(libs.knit.loader.fabric)
+    include(libs.bundles.knit.loader)
 }
 
 tasks.processResources {
     inputs.property("version", project.version)
     inputs.property("minecraft_version", stonecutter.current.version)
-    inputs.property("loader_version", project.property("loader_version"))
     filteringCharset = "UTF-8"
+
+    exclude("log4j2.component.properties") // We don't need this
 
     filesMatching("fabric.mod.json") {
         expand(

@@ -14,9 +14,6 @@
     "icon": "assets/twill/icon.png",
     "environment": "*",
     "entrypoints": {
-        "client": [
-            "xyz.bluspring.twill.client.TwillClient"
-        ],
         "main": [
             "xyz.bluspring.twill.Twill"
         ]
