@@ -58,7 +58,11 @@ open class TwillLoader(id: String = "twill") : KnitModLoader<NeoForgeMod>(id, "n
             FabricLoader.getInstance().environmentType != EnvType.CLIENT,
             FabricLoader.getInstance().environmentType.asNeoForge,
             false,
-            FabricLoader.getInstance().getLaunchArguments(true),
+            arrayOf(
+                *FabricLoader.getInstance().getLaunchArguments(true),
+                "--fml.mcVersion", FabricLoader.getInstance().getModContainer("minecraft").orElseThrow().metadata.version.friendlyString,
+                "--fml.neoFormVersion", "none",
+            ),
             setOf(),
             listOf(),
             this::class.java.classLoader,
@@ -140,7 +144,7 @@ open class TwillLoader(id: String = "twill") : KnitModLoader<NeoForgeMod>(id, "n
         return (a shl 24) or (r shl 16) or (g shl 8) or b
     }
 
-    private val loadedModIds: MutableList<String> = Collections.synchronizedList(mutableListOf())
+    private val loadedModIds: MutableSet<String> = Collections.synchronizedSet(mutableSetOf())
 
     override fun modExistsNatively(id: String): Boolean {
         if (this.loadedModIds.contains(id))
@@ -174,6 +178,20 @@ open class TwillLoader(id: String = "twill") : KnitModLoader<NeoForgeMod>(id, "n
     }
 
     private val jijPath = FabricLoader.getInstance().gameDir.resolve(".twill/extractedMods")
+
+    override fun collectAdditionalModDefinitions(gameDir: Path): Collection<ModDefinition> {
+        val discoveryResult = FMLLoader.getCurrent().runDiscovery()
+        val definitions = discoveryResult.modFiles().flatMap { it.asKnitDefinitions(it.discoveryAttributes.parent) }
+
+        if (discoveryResult.discoveryIssues.isNotEmpty())
+            Twill.logger.error("Encountered issues while handling FML mod discovery!")
+
+        for (issue in discoveryResult.discoveryIssues()) {
+            Twill.logger.error("- $issue")
+        }
+
+        return definitions
+    }
 
     protected open fun loadModDefinitions(path: Path, parent: IModFile? = null): List<ModDefinition> {
         if (path.extension != "jar")
