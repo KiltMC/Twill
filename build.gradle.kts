@@ -50,7 +50,7 @@ repositories {
 
 dependencies {
     // To change the versions see the gradle.properties file
-    minecraft("com.mojang:minecraft:${stonecutter.current.version}")
+    minecraft("com.mojang:minecraft:${findProperty("minecraft_override") ?: stonecutter.current.version}")
     implementation(libs.fabric.loader)
     implementation(libs.fabric.kotlin)
 
@@ -66,7 +66,10 @@ dependencies {
     api(include("org.apache.maven:maven-artifact:${fmlProperties.getProperty("apache_maven_artifact_version")}")!!)
     api(include("com.electronwill.night-config:core:${fmlProperties.getProperty("nightconfig_version")}")!!)
     api(include("com.electronwill.night-config:toml:${fmlProperties.getProperty("nightconfig_version")}")!!)
-    api(include(fletchingTable.modrinth("modmenu-badges-lib", stonecutter.current.version, "fabric"))!!)
+
+    try {
+        api(include(fletchingTable.modrinth("modmenu-badges-lib", stonecutter.current.version, "fabric"))!!)
+    } catch (_: Throwable) {}
 
     implementation(libs.massasmer)
     include(libs.massasmer)
@@ -85,7 +88,7 @@ tasks.processResources {
     filesMatching("fabric.mod.json") {
         expand(
             "version" to project.version,
-            "minecraft_version" to stonecutter.current.version,
+            "minecraft_version" to project.property("mc_version_range")!!,
             "loader_version" to libs.versions.fabric.loader.get(),
             "kotlin_loader_version" to libs.versions.fabric.kotlin.get(),
         )
