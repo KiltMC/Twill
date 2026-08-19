@@ -18,6 +18,15 @@ knit-loader = "0.1.0"
 # https://github.com/zOnlyKroks/MassAsmer
 massasmer = "v2.0.2-beta"
 
+# https://mvn.devos.one/#/releases/fish/cichlidmc/fishflakes
+fishflakes = "0.2.0"
+
+# https://mvn.devos.one/#/releases/fish/cichlidmc/tiny-json
+tiny-json = "3.0.0"
+
+# https://mvn.devos.one/#/releases/fish/cichlidmc/tiny-codecs
+tiny-codecs = "6.1.0"
+
 [libraries]
 fabric-loader = { module = "net.fabricmc:fabric-loader", version.ref = "fabric-loader" }
 fabric-kotlin = { module = "net.fabricmc:fabric-language-kotlin", version.ref = "fabric-kotlin" }
@@ -28,11 +37,18 @@ knit-loader-quilt = { module = "xyz.bluspring.knit-loader:knit-loader-quilt", ve
 
 massasmer = { module = "com.github.zOnlyKroks:MassAsmer", version.ref = "massasmer" }
 
+fishflakes = { module = "fish.cichlidmc:fishflakes", version.ref = "fishflakes" }
+tiny-json = { module = "fish.cichlidmc:tiny-json", version.ref = "tiny-json" }
+tiny-codecs = { module = "fish.cichlidmc:tiny-codecs", version.ref = "tiny-codecs" }
+
 [bundles]
 knit-loader = [
     "knit-loader-common",
     "knit-loader-fabric",
     "knit-loader-quilt",
+]
+tiny-codecs = [
+    "fishflakes", "tiny-json", "tiny-codecs"
 ]
 
 [plugins]

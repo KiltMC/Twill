@@ -1,6 +1,7 @@
 package xyz.bluspring.twill.loader
 
 import com.google.gson.JsonParser
+import fish.cichlidmc.tinyjson.TinyJson
 import net.fabricmc.api.EnvType
 import net.fabricmc.loader.api.FabricLoader
 import net.neoforged.fml.classloading.transformation.ClassProcessorSet
@@ -25,37 +26,46 @@ import xyz.bluspring.knit.loader.mod.ModDefinition
 import xyz.bluspring.knit.loader.mod.ModDependency
 import xyz.bluspring.knit.loader.mod.ModEnvironment
 import xyz.bluspring.twill.Twill
+import xyz.bluspring.twill.api.WrappedModContainerEntrypoint
 import xyz.bluspring.twill.api.util.PlatformConversionUtils.asNeoForge
+import xyz.bluspring.twill.loader.fabric.WrappedFabricModContainer
 import xyz.bluspring.twill.loader.knit.NeoForgeMod
 import xyz.bluspring.twill.loader.knit.NeoForgeModVersion
 import xyz.bluspring.twill.loader.knit.NeoForgeVersionConstraint
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.StandardOpenOption
 import java.util.*
 import kotlin.io.path.*
 
-open class TwillLoader(id: String = "twill") : KnitModLoader<NeoForgeMod>(id, "neoforge") {
+open class TwillLoader : KnitModLoader<NeoForgeMod>("twill", "neoforge") {
     companion object {
+        @JvmStatic
+        lateinit var instance: TwillLoader
+
         lateinit var classProcessors: ClassProcessorSet
             private set
     }
 
+    var config = TwillLoaderConfig()
+
     init {
+        instance = this
         val loader = FabricLoader.getInstance()
 
         // Sanity check for determining if Fabric mods are bundling NeoForge classes for whatever reason
         for (container in loader.allMods) {
             // Ignore ourselves and whatever we know works correctly.
-            if (container.metadata.id == "twill" || container.metadata.id == "forgeconfigapiport" || container.metadata.id == "twill" ||
+            if (container.metadata.id == "twill" || container.metadata.id == "kilt" ||
                 // If the mod parent is Kilt, then it's probably safe.
                 (container.containingMod.isPresent && (container.containingMod.orElseThrow().metadata.id == "twill" || container.containingMod.orElseThrow().metadata.id == "kilt"))
             )
                 continue
 
-            val path = container.findPath("net/neoforged/fml/")
+            val path = container.findPath("net/neoforged/")
 
             if (path.isPresent && path.orElseThrow().isDirectory()) {
-                Twill.logger.warn("Twill: Fabric mod ${container.metadata.name} (${container.metadata.id}) is likely repackaging FancyModLoader classes! This may lead to a game crash!")
+                Twill.logger.warn("Twill: Fabric mod ${container.metadata.name} (${container.metadata.id}) is likely repackaging NeoForge or FancyModLoader classes! This may lead to a game crash!")
             }
         }
 
@@ -73,6 +83,23 @@ open class TwillLoader(id: String = "twill") : KnitModLoader<NeoForgeMod>(id, "n
             listOf(),
             this::class.java.classLoader,
         ), this::class.java.classLoader, !FabricLoader.getInstance().isDevelopmentEnvironment)
+        this.loadConfig()
+    }
+
+    fun loadConfig() {
+        if (TwillLoaderConfig.PATH.exists()) {
+            try {
+                TwillLoaderConfig.CODEC.decode(TinyJson.parse(TwillLoaderConfig.PATH.reader(options = arrayOf(
+                    StandardOpenOption.READ))))
+                    .ifPresentOrElse({
+                        this.config = it
+                    }, {
+                        Twill.logger.error("An error occurred while trying to load the Twill loader config! Error: $it")
+                    })
+            } catch (e: Throwable) {
+                Twill.logger.error("An error occurred while trying to load the Twill loader config!", e)
+            }
+        }
     }
 
     override fun getModDefinitions(path: Path): List<ModDefinition> {
@@ -325,6 +352,13 @@ open class TwillLoader(id: String = "twill") : KnitModLoader<NeoForgeMod>(id, "n
         fml.languageProviderLoader = LanguageProviderLoader(fml.LaunchContextAdapter(), )
         for (file in fml.loadingModList.allModFiles) {
             (file as ModFile).identifyLanguage()
+        }
+    }
+
+    open fun loadMods() {
+        // Let's provide any Fabric mods with their wrapped container entrypoints
+        for (container in FabricLoader.getInstance().getEntrypointContainers(WrappedModContainerEntrypoint.ENTRYPOINT, WrappedModContainerEntrypoint::class.java)) {
+            container.entrypoint.onLoadModContainer(WrappedFabricModContainer.get(container.provider))
         }
     }
 }

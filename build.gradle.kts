@@ -40,6 +40,7 @@ java {
 }
 
 repositories {
+    maven("https://mvn.devos.one/releases")
     maven("https://maven.neoforged.net/releases")
     maven("https://maven.florianreuth.de/snapshots")
     maven("https://maven.bawnorton.com/releases")
@@ -76,6 +77,9 @@ dependencies {
 
     implementation(libs.knit.loader.fabric)
     include(libs.bundles.knit.loader)
+
+    api(libs.bundles.tiny.codecs)
+    include(libs.bundles.tiny.codecs)
 }
 
 tasks.processResources {
