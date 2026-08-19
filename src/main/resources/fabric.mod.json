@@ -16,6 +16,9 @@
     "entrypoints": {
         "main": [
             "xyz.bluspring.twill.Twill"
+        ],
+        "mass-asm": [
+            "xyz.bluspring.twill.processor.TwillClassProcessorImpl"
         ]
     },
     "mixins": [

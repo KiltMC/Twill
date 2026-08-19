@@ -15,6 +15,9 @@ fabric-kotlin = "1.13.13+kotlin.2.4.10"
 # this doesn't actually matter, we're dependency substituting anyway.
 knit-loader = "0.1.0"
 
+# https://github.com/zOnlyKroks/MassAsmer
+massasmer = "v2.0.2-beta"
+
 [libraries]
 fabric-loader = { module = "net.fabricmc:fabric-loader", version.ref = "fabric-loader" }
 fabric-kotlin = { module = "net.fabricmc:fabric-language-kotlin", version.ref = "fabric-kotlin" }
@@ -22,6 +25,8 @@ fabric-kotlin = { module = "net.fabricmc:fabric-language-kotlin", version.ref = 
 knit-loader-fabric = { module = "xyz.bluspring.knit-loader:knit-loader-fabric", version.ref = "knit-loader" }
 knit-loader-common = { module = "xyz.bluspring.knit-loader:knit-loader-quilt", version.ref = "knit-loader" }
 knit-loader-quilt = { module = "xyz.bluspring.knit-loader:knit-loader-quilt", version.ref = "knit-loader" }
+
+massasmer = { module = "com.github.zOnlyKroks:MassAsmer", version.ref = "massasmer" }
 
 [bundles]
 knit-loader = [

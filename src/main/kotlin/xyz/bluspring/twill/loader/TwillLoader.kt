@@ -3,6 +3,7 @@ package xyz.bluspring.twill.loader
 import com.google.gson.JsonParser
 import net.fabricmc.api.EnvType
 import net.fabricmc.loader.api.FabricLoader
+import net.neoforged.fml.classloading.transformation.ClassProcessorSet
 import net.neoforged.fml.jarcontents.JarContents
 import net.neoforged.fml.jarcontents.JarFileContents
 import net.neoforged.fml.loading.FMLLoader
@@ -34,6 +35,11 @@ import java.util.*
 import kotlin.io.path.*
 
 open class TwillLoader(id: String = "twill") : KnitModLoader<NeoForgeMod>(id, "neoforge") {
+    companion object {
+        lateinit var classProcessors: ClassProcessorSet
+            private set
+    }
+
     init {
         val loader = FabricLoader.getInstance()
 
@@ -302,10 +308,11 @@ open class TwillLoader(id: String = "twill") : KnitModLoader<NeoForgeMod>(id, "n
 
     override suspend fun createModContainers(definitions: Collection<ModDefinition>): Collection<NeoForgeMod> {
         val mods = definitions.map(::NeoForgeMod)
-        FMLLoader.getCurrent().`twill$setup`(ModDiscoverer.Result(
+        val discovery = FMLLoader.getCurrent().`twill$setup`(ModDiscoverer.Result(
             mods.map { it.modFile as ModFile }, // apparently FML just does a direct cast. okay then.
             emptyList()
         ))
+        classProcessors = FMLLoader.createClassProcessorSet(null, FMLLoader.getCurrent().LaunchContextAdapter(), discovery, null)
         return mods
     }
 
