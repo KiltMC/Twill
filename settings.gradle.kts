@@ -16,8 +16,9 @@ plugins {
     id("dev.kikugie.stonecutter") version "0.9.+" // https://stonecutter.kikugie.dev/
 }
 
-val supportedVersions = listOf("26.1.2", "26.2",
-    //"26.3" // 
+val supportedVersions = listOf(
+    "26.1.2", "26.2", // FML v11
+    "26.3", // FML v12
 )
 
 stonecutter {

@@ -18,6 +18,10 @@ base {
     archivesName.set(project.property("archives_base_name") as String)
 }
 
+stonecutter {
+    dependencies["fml"] = fmlVersion
+}
+
 sourceSets {
     getByName("main") {
         java.srcDir("src/main/java")
@@ -67,6 +71,10 @@ dependencies {
     api(include("org.apache.maven:maven-artifact:${fmlProperties.getProperty("apache_maven_artifact_version")}")!!)
     api(include("com.electronwill.night-config:core:${fmlProperties.getProperty("nightconfig_version")}")!!)
     api(include("com.electronwill.night-config:toml:${fmlProperties.getProperty("nightconfig_version")}")!!)
+
+    if (stonecutter.eval(fmlVersion, ">=12")) {
+        api(include("net.neoforged:JarJarFileSystems:${fmlProperties.getProperty("jarjar_version")}")!!)
+    }
 
     try {
         api(include(fletchingTable.modrinth("modmenu-badges-lib", stonecutter.current.version, "fabric"))!!)

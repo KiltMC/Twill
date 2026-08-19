@@ -17,6 +17,9 @@
         "main": [
             "xyz.bluspring.twill.Twill"
         ],
+        "client": [
+            "xyz.bluspring.twill.TwillClient"
+        ],
         "mass-asm": [
             "xyz.bluspring.twill.processor.TwillClassProcessorImpl"
         ]
