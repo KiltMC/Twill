@@ -12,6 +12,9 @@ interface TwillOverrides {
         var instance: TwillOverrides = object : TwillOverrides {}
     }
 
+    val hasLaunchOverride: Boolean
+        get() = false
+
     val mods: Collection<NeoForgeMod>
         get() = TwillLoader.instance.mods
 
