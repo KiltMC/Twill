@@ -9,6 +9,7 @@ class Twill : ModInitializer {
     }
 
     companion object {
+        const val MOD_ID = "twill"
         @JvmStatic val logger: Logger = LoggerFactory.getLogger("Twill")
     }
 }
