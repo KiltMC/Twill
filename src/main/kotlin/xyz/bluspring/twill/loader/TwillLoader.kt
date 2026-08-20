@@ -21,6 +21,7 @@ import net.neoforged.neoforgespi.language.IModInfo
 import net.neoforged.neoforgespi.locating.IModFile
 import net.neoforged.neoforgespi.locating.ModFileDiscoveryAttributes
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion
+import xyz.bluspring.knit.loader.KnitLoader
 import xyz.bluspring.knit.loader.KnitModLoader
 import xyz.bluspring.knit.loader.mod.ModDefinition
 import xyz.bluspring.knit.loader.mod.ModDependency
@@ -40,6 +41,8 @@ import kotlin.io.path.*
 
 open class TwillLoader : KnitModLoader<NeoForgeMod>("twill", "neoforge") {
     companion object {
+        private const val TWILL_ERROR_MESSAGE = "Twill: Failed to start Kilt/Twill, please read the exception below!"
+
         @JvmStatic
         lateinit var instance: TwillLoader
 
@@ -52,6 +55,8 @@ open class TwillLoader : KnitModLoader<NeoForgeMod>("twill", "neoforge") {
     init {
         instance = this
         val loader = FabricLoader.getInstance()
+
+        FabricLoader.getInstance().invokeEntrypoints("twill:early_init", Runnable::class.java) {}
 
         // Sanity check for determining if Fabric mods are bundling NeoForge classes for whatever reason
         for (container in loader.allMods) {
@@ -193,6 +198,9 @@ open class TwillLoader : KnitModLoader<NeoForgeMod>("twill", "neoforge") {
     private val loadedModIds: MutableSet<String> = Collections.synchronizedSet(mutableSetOf())
 
     override fun modExistsNatively(id: String): Boolean {
+        if (TwillOverrides.instance.modExistsNatively(id))
+            return true
+
         if (this.loadedModIds.contains(id))
             return false
 
@@ -200,6 +208,10 @@ open class TwillLoader : KnitModLoader<NeoForgeMod>("twill", "neoforge") {
     }
 
     override fun getNativeModId(dependencyId: String, nativeLoaderName: String): String {
+        TwillOverrides.instance.getNativeModId(dependencyId)?.let {
+            return it
+        }
+
         val loader = FabricLoader.getInstance()
         if (loader.isModLoaded(dependencyId))
             return dependencyId
@@ -334,13 +346,32 @@ open class TwillLoader : KnitModLoader<NeoForgeMod>("twill", "neoforge") {
     }
 
     override suspend fun createModContainers(definitions: Collection<ModDefinition>): Collection<NeoForgeMod> {
+        TwillOverrides.instance.tryRemapMods(definitions)
+
         val mods = definitions.map(::NeoForgeMod)
+        TwillOverrides.instance.detectModSpecificEasterEggs(mods)
+
+        for (container in mods) {
+            // Prevent users from having both Kilt and Connector at the same time.
+            if (container.modFile.contents.get("org/sinytra/connector/ConnectorUtil.class") != null) {
+                KnitLoader.instance.displayError(TWILL_ERROR_MESSAGE, Exception("Sinytra Connector was detected! I know I said \"Isn't it reasonable to have both?\", but come on!"))
+            }
+
+            (container.modFile as ModFile).`twill$knitAssociation` = container
+        }
+
         val discovery = FMLLoader.getCurrent().`twill$setup`(ModDiscoverer.Result(
             mods.map { it.modFile as ModFile }, // apparently FML just does a direct cast. okay then.
             emptyList()
         ))
+
         classProcessors = FMLLoader.createClassProcessorSet(null, FMLLoader.getCurrent().LaunchContextAdapter(), discovery, null)
-        return mods
+        return discovery.allContent().mapNotNull { it.`twill$knitAssociation` }
+    }
+
+    override fun preInitialize() {
+        super.preInitialize()
+        TwillOverrides.instance.preInitialize()
     }
 
     override fun finishModScanning() {
@@ -353,12 +384,20 @@ open class TwillLoader : KnitModLoader<NeoForgeMod>("twill", "neoforge") {
         for (file in fml.loadingModList.allModFiles) {
             (file as ModFile).identifyLanguage()
         }
+
+        TwillOverrides.instance.finishModScanning()
     }
 
     open fun loadMods() {
+        TwillOverrides.instance.loadMods()
+
         // Let's provide any Fabric mods with their wrapped container entrypoints
         for (container in FabricLoader.getInstance().getEntrypointContainers(WrappedModContainerEntrypoint.ENTRYPOINT, WrappedModContainerEntrypoint::class.java)) {
             container.entrypoint.onLoadModContainer(WrappedFabricModContainer.get(container.provider))
         }
+    }
+
+    fun hasMod(id: String): Boolean {
+        return this.loadedModIds.contains(id)
     }
 }

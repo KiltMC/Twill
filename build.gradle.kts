@@ -75,7 +75,7 @@ dependencies {
     implementation(libs.massasmer)
     include(libs.massasmer)
 
-    implementation(libs.knit.loader.fabric)
+    api(libs.knit.loader.fabric)
     include(libs.bundles.knit.loader)
 
     api(libs.bundles.tiny.codecs)
