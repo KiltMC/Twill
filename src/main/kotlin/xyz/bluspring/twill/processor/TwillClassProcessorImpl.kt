@@ -19,6 +19,9 @@ class TwillClassProcessorImpl : Runnable {
     private object KnotClassLoaderAccess {
         private val knotClassLoader = Class.forName("net.fabricmc.loader.impl.launch.knot.KnotClassLoader")
         private val findLoadedClassFwd = knotClassLoader.getDeclaredMethod("findLoadedClassFwd", String::class.java)
+            .apply {
+                isAccessible = true
+            }
         val classLoader: ClassLoader = TwillLoader::class.java.classLoader
 
         fun findLoadedClass(name: String): Class<*>? {
