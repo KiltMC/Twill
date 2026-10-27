@@ -56,6 +56,7 @@ open class TwillLoader : KnitModLoader<NeoForgeMod>("twill", "neoforge") {
         instance = this
         val loader = FabricLoader.getInstance()
 
+        System.setProperty("mixinconstraints.abstraction", "com.moulberry.mixinconstraints.FabricAbstractionsImpl") // Force MixinConstraints to use the Fabric abstractions.
         FabricLoader.getInstance().invokeEntrypoints("twill:early_init", Runnable::class.java) {}
 
         // Sanity check for determining if Fabric mods are bundling NeoForge classes for whatever reason
@@ -380,7 +381,7 @@ open class TwillLoader : KnitModLoader<NeoForgeMod>("twill", "neoforge") {
         // This process was moved from FMLLoader.create
         val fml = FMLLoader.getCurrent()
         fml.loadPlugins(fml.loadingModList.plugins)
-        fml.languageProviderLoader = LanguageProviderLoader(fml.LaunchContextAdapter(), )
+        fml.languageProviderLoader = LanguageProviderLoader(fml.LaunchContextAdapter())
         for (file in fml.loadingModList.allModFiles) {
             (file as ModFile).identifyLanguage()
         }
