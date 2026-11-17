@@ -12,7 +12,7 @@ import xyz.bluspring.twill.loader.TwillLoader
 
 class TwillClient : ClientModInitializer {
     override fun onInitializeClient() {
-        DebugScreenEntries.register(id("version"), object : DebugScreenEntry {
+        DebugScreenEntries.register(id("info"), object : DebugScreenEntry {
             override fun display(displayer: DebugScreenDisplayer, serverOrClientLevel: Level?, clientChunk: LevelChunk?, serverChunk: LevelChunk?) {
                 val version = FabricLoader.getInstance().getModContainer("twill")
                     .orElseThrow().metadata.version.friendlyString
@@ -25,15 +25,6 @@ class TwillClient : ClientModInitializer {
                     "§b"
 
                 displayer.addToGroup(id("info"), "Twill Loader ${color}v$version")
-            }
-
-            override fun isAllowed(reducedDebugInfo: Boolean): Boolean {
-                return true
-            }
-        })
-
-        DebugScreenEntries.register(id("loaded_mods"), object : DebugScreenEntry {
-            override fun display(displayer: DebugScreenDisplayer, serverOrClientLevel: Level?, clientChunk: LevelChunk?, serverChunk: LevelChunk?) {
                 displayer.addToGroup(id("info"), "${TwillLoader.instance.mods.size} mods loaded")
             }
 
