@@ -17,3 +17,10 @@ supported_versions = "26.3"
 mc_version_range = "~26.3"
 fabric_api = "0.166.2+26.3"
 fml = "12"
+
+["26.4"]
+minecraft_override = "26.4-snapshot-8"
+supported_versions = "26.4-snapshot-8"
+mc_version_range = "~26.4-"
+fabric_api = "0.166.2+26.4"
+fml = "12"

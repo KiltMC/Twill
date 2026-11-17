@@ -18,7 +18,7 @@ plugins {
 
 val supportedVersions = listOf(
     "26.1.2", "26.2", // FML v11
-    "26.3", // FML v12
+    "26.3", "26.4", // FML v12
 )
 
 stonecutter {
