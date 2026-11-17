@@ -7,7 +7,8 @@
         "launch.server.MainMixin"
     ],
     "client": [
-        "launch.client.MainMixin"
+        "launch.client.MainMixin",
+        "launch.client.MinecraftMixin"
     ],
     "injectors": {
         "defaultRequire": 1

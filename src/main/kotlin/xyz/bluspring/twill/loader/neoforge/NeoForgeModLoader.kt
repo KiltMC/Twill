@@ -31,7 +31,13 @@ abstract class NeoForgeModLoader {
                     ConfigTracker.INSTANCE.loadConfigs(ModConfig.Type.CLIENT, FMLPaths.CONFIGDIR.get())
                 }
 
-                ConfigTracker.INSTANCE.loadConfigs(ModConfig.Type.COMMON, FMLPaths.CONFIGDIR.get())
+                ConfigTracker.INSTANCE.loadConfigs(
+                    //? if fml: <= 11 {
+                    ModConfig.Type.COMMON,
+                    //? } else {
+                    /*ModConfig.Type.LOCAL,
+                    *///? }
+                    FMLPaths.CONFIGDIR.get())
             }
         }
 

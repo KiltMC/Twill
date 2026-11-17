@@ -16,8 +16,7 @@ import net.minecraft.server.Main;
 public abstract class MainMixin {
     @Inject(method = "main", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/dedicated/DedicatedServerSettings;<init>(Ljava/nio/file/Path;)V"))
     private static void twill$constructClientModLoader(String[] args, CallbackInfo ci, @Local(name = "options") OptionSet options, @Local(name = "initSettings") OptionSpec<Void> initSettings) {
-        if (!TwillOverrides.getInstance().getHasLaunchOverride() && !options.has(initSettings)) {
+        if (!TwillOverrides.getInstance().getHasLaunchOverride() && !options.has(initSettings))
             TwillModLoaders.INSTANCE.getServerModLoader().load(false);
-        }
     }
 }

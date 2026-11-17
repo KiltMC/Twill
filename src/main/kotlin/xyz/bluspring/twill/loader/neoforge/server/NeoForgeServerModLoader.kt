@@ -9,7 +9,7 @@ open class NeoForgeServerModLoader : NeoForgeModLoader() {
             this.begin({}, false)
             this.load {}
         } catch (error: ModLoadingException) {
-            
+            throw error
         }
     }
 }
