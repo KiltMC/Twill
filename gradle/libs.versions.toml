@@ -1,6 +1,6 @@
 [versions]
 # https://fabricmc.net/develop/
-fabric-loom = "1.18.+"
+fabric-loom = "1.19.+"
 fabric-loader = "0.20.1"
 
 # https://stonecutter.kikugie.dev/
