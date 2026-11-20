@@ -1,6 +1,7 @@
 package xyz.bluspring.twill.loader
 
 import com.google.gson.JsonParser
+import de.florianreuth.asmfabricloader.api.EarlyRiser
 import fish.cichlidmc.tinyjson.TinyJson
 import net.fabricmc.api.EnvType
 import net.fabricmc.loader.api.FabricLoader
@@ -33,6 +34,7 @@ import xyz.bluspring.twill.loader.fabric.WrappedFabricModContainer
 import xyz.bluspring.twill.loader.knit.NeoForgeMod
 import xyz.bluspring.twill.loader.knit.NeoForgeModVersion
 import xyz.bluspring.twill.loader.knit.NeoForgeVersionConstraint
+import xyz.bluspring.twill.loader.neoforge.ModsTomlBackedJarContents
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
@@ -57,7 +59,9 @@ open class TwillLoader : KnitModLoader<NeoForgeMod>("twill", "neoforge") {
         val loader = FabricLoader.getInstance()
 
         System.setProperty("mixinconstraints.abstraction", "com.moulberry.mixinconstraints.FabricAbstractionsImpl") // Force MixinConstraints to use the Fabric abstractions.
-        FabricLoader.getInstance().invokeEntrypoints("twill:early_init", Runnable::class.java) {}
+        EarlyRiser.invokeEntrypoints("twill:early_init", Runnable::class.java) {
+            it.run()
+        }
 
         // Sanity check for determining if Fabric mods are bundling NeoForge classes for whatever reason
         for (container in loader.allMods) {
@@ -134,7 +138,7 @@ open class TwillLoader : KnitModLoader<NeoForgeMod>("twill", "neoforge") {
     private val IModFile.mixinConfigs: List<ModFileParser.MixinConfig>
         get() = (this as? ModFile)?.mixinConfigs ?: emptyList()
 
-    private fun IModFile.asKnitDefinitions(parent: IModFile?): List<ModDefinition> {
+    private fun IModFile.asKnitDefinitions(parent: IModFile?, isBuiltIn: Boolean = false): List<ModDefinition> {
         if (this.type != IModFile.Type.MOD && this.modInfos.isEmpty()) {
             return listOf(
                 ModDefinition(this.filePath, this.id, this.fileName, version = NeoForgeModVersion(DefaultArtifactVersion(this.modFileInfo.versionString() ?: "0.0.0-unknown")), license = this.modFileInfo.license,
@@ -143,7 +147,8 @@ open class TwillLoader : KnitModLoader<NeoForgeMod>("twill", "neoforge") {
                     ),
                     loaderCustomData = mapOf(
                         "badges" to listOf("library"), // force ModMenu to hide this
-                    )
+                    ),
+                    isBuiltin = isBuiltIn,
                 )
             )
         }
@@ -187,6 +192,7 @@ open class TwillLoader : KnitModLoader<NeoForgeMod>("twill", "neoforge") {
                         )
                     )
                 ),
+                isBuiltin = isBuiltIn,
             )
         }
     }
@@ -306,6 +312,21 @@ open class TwillLoader : KnitModLoader<NeoForgeMod>("twill", "neoforge") {
         }
 
         return definitions
+    }
+
+    override fun getBuiltinModDefinitions(): List<ModDefinition> {
+        val builtIn = TwillOverrides.instance.getBuiltinModDefinitions()
+        if (builtIn.isNotEmpty()) {
+            val definitions = mutableListOf<ModDefinition>()
+            for ((paths, tomlUri, tomlStream) in builtIn) {
+                definitions.addAll(tryGetModFiles(ModsTomlBackedJarContents(paths, tomlUri, tomlStream), ModFileDiscoveryAttributes.DEFAULT.withParent(null))
+                    .flatMap { it.asKnitDefinitions(it.discoveryAttributes.parent, isBuiltIn = true) })
+            }
+
+            return definitions
+        }
+
+        return super.getBuiltinModDefinitions()
     }
 
     protected open fun loadModDefinitions(path: Path, parent: IModFile? = null): List<ModDefinition> {

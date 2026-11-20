@@ -41,6 +41,10 @@ interface TwillOverrides {
         return null
     }
 
+    fun getBuiltinModDefinitions(): List<BuiltinModDefinition> {
+        return emptyList()
+    }
+
     suspend fun tryRemapMods(definitions: Collection<ModDefinition>) {}
 
     fun detectModSpecificEasterEggs(containers: Collection<NeoForgeMod>) {}
