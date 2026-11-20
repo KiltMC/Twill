@@ -54,6 +54,12 @@ interface TwillOverrides {
         return false
     }
 
+    val overrideName: String?
+        get() = null
+
+    val overrideVersion: String?
+        get() = null
+
     fun preInitialize() {}
 
     fun loadMods() {}
