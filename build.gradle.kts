@@ -169,24 +169,28 @@ tasks {
         dryRun = providers.environmentVariable("MODRINTH_TOKEN").getOrNull() == null
             || providers.environmentVariable("CURSEFORGE_TOKEN").getOrNull() == null
 
+        val supportedVersions = (property("supported_versions") as String).split(",")
+
         modrinth {
             projectId = project.property("publishing.modrinth").toString()
             accessToken = providers.environmentVariable("MODRINTH_TOKEN")
-            minecraftVersions.addAll((property("supported_versions") as String).split(","))
+            minecraftVersions.addAll(supportedVersions)
 
             requires("fabric-api", "fabric-language-kotlin")
             embeds("modmenu-badges-lib")
         }
 
-        curseforge {
-            projectId = project.property("publishing.curseforge").toString()
-            client = true
-            server = true
-            accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
-            minecraftVersions.addAll((property("supported_versions") as String).split(","))
+        if (supportedVersions.none { it.contains("-snapshot-") }) {
+            curseforge {
+                projectId = project.property("publishing.curseforge").toString()
+                client = true
+                server = true
+                accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
+                minecraftVersions.addAll(supportedVersions)
 
-            requires("fabric-api", "fabric-language-kotlin")
-            embeds("modmenu-badges-lib")
+                requires("fabric-api", "fabric-language-kotlin")
+                embeds("modmenu-badges-lib")
+            }
         }
     }
 
