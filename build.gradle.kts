@@ -1,5 +1,9 @@
+import me.modmuss50.mpp.ModPublishExtension
+import me.modmuss50.mpp.ReleaseType
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import java.net.HttpURLConnection
+import java.net.URI
 import java.util.*
 
 plugins {
@@ -127,6 +131,89 @@ tasks.jar {
     }
 }
 
+tasks {
+    project.extensions.configure<ModPublishExtension>("publishMods") {
+        file = project.tasks.named<Jar>("jar").get().archiveFile
+        displayName = "Twill v${project.version} (MC ${stonecutter.current.version})"
+        version = project.version as String
+        changelog = System.getenv("RELEASE_DESCRIPTION") ?: ""
+        type = ReleaseType.STABLE
+        modLoaders.add("fabric")
+
+        dryRun = providers.environmentVariable("MODRINTH_TOKEN").getOrNull() == null
+            || providers.environmentVariable("CURSEFORGE_TOKEN").getOrNull() == null
+
+        modrinth {
+            projectId = project.property("publishing.modrinth").toString()
+            accessToken = providers.environmentVariable("MODRINTH_TOKEN")
+            minecraftVersions.addAll((property("supported_versions") as String).split(","))
+
+            requires("fabric-api", "fabric-language-kotlin")
+            embeds("modmenu-badges-lib")
+        }
+
+        curseforge {
+            projectId = project.property("publishing.curseforge").toString()
+            client = true
+            server = true
+            accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
+            minecraftVersions.addAll((property("supported_versions") as String).split(","))
+
+            requires("fabric-api", "fabric-language-kotlin")
+            embeds("modmenu-badges-lib")
+        }
+    }
+
+    named("publishMavenJavaPublicationToDevOSRepository") {
+        onlyIf {
+            val group = project.property("maven_group") as String
+            val artifactId = project.property("archives_base_name") as String
+            val version = project.version.toString()
+
+            try {
+                val connection = URI.create("https://mvn.devos.one/releases/${group.replace(".", "/")}/${artifactId}/${version}/${artifactId}-${version}.jar").toURL().openConnection() as HttpURLConnection
+                connection.requestMethod = "GET"
+                connection.connect()
+
+                connection.responseCode != 200
+            } catch (_: Exception) {
+                false
+            }
+        }
+    }
+
+    named("publishCurseforge") {
+        onlyIf {
+            try {
+                // this is how CurseForge has it set up? seriously?
+                val connection = URI.create("https://minecraft.curseforge.com/api/maven/twill/Twill/${version}/Twill-${version}.jar")
+                    .toURL().openConnection() as HttpURLConnection
+                connection.requestMethod = "GET"
+                connection.connect()
+
+                connection.responseCode != 200
+            } catch (_: Exception) {
+                false
+            }
+        }
+    }
+
+    named("publishModrinth") {
+        onlyIf {
+            try {
+                val connection = URI.create("https://api.modrinth.com/v2/project/twill/version/${version}").toURL()
+                    .openConnection() as HttpURLConnection
+                connection.requestMethod = "GET"
+                connection.connect()
+
+                connection.responseCode != 200
+            } catch (_: Exception) {
+                false
+            }
+        }
+    }
+}
+
 // configure the maven publication
 publishing {
     publications {
@@ -138,10 +225,13 @@ publishing {
 
     // See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
     repositories {
-        // Add repositories to publish to here.
-        // Notice: This block does NOT have the same function as the block in the top level.
-        // The repositories here will be used for publishing your artifact, not for
-        // retrieving dependencies.
+        maven("https://mvn.devos.one/releases") {
+            name = "devOS"
+            credentials {
+                username = System.getenv()["MAVEN_USER"]
+                password = System.getenv()["MAVEN_PASS"]
+            }
+        }
     }
 }
 
