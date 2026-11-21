@@ -212,18 +212,20 @@ tasks {
         }
     }
 
-    named("publishCurseforge") {
-        onlyIf {
-            try {
-                // this is how CurseForge has it set up? seriously?
-                val connection = URI.create("https://minecraft.curseforge.com/api/maven/twill/Twill/${version}/Twill-${version}.jar")
-                    .toURL().openConnection() as HttpURLConnection
-                connection.requestMethod = "GET"
-                connection.connect()
+    if (any { it.name.contains("publishCurseforge") }) {
+        named("publishCurseforge") {
+            onlyIf {
+                try {
+                    // this is how CurseForge has it set up? seriously?
+                    val connection = URI.create("https://minecraft.curseforge.com/api/maven/twill/Twill/${version}/Twill-${version}.jar")
+                        .toURL().openConnection() as HttpURLConnection
+                    connection.requestMethod = "GET"
+                    connection.connect()
 
-                connection.responseCode != 200
-            } catch (_: Exception) {
-                false
+                    connection.responseCode != 200
+                } catch (_: Exception) {
+                    false
+                }
             }
         }
     }
