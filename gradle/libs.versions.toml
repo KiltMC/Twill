@@ -35,7 +35,7 @@ fabric-loader = { module = "net.fabricmc:fabric-loader", version.ref = "fabric-l
 fabric-kotlin = { module = "net.fabricmc:fabric-language-kotlin", version.ref = "fabric-kotlin" }
 
 knit-loader-fabric = { module = "xyz.bluspring.knit-loader:knit-loader-fabric", version.ref = "knit-loader" }
-knit-loader-common = { module = "xyz.bluspring.knit-loader:knit-loader-quilt", version.ref = "knit-loader" }
+knit-loader-common = { module = "xyz.bluspring.knit-loader:knit-loader-common", version.ref = "knit-loader" }
 knit-loader-quilt = { module = "xyz.bluspring.knit-loader:knit-loader-quilt", version.ref = "knit-loader" }
 
 massasmer = { module = "com.github.zOnlyKroks:MassAsmer", version.ref = "massasmer" }

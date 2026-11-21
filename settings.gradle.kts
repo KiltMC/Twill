@@ -38,6 +38,9 @@ includeBuild("knit-loader") {
 
         substitute(module("xyz.bluspring.knit-loader:knit-loader-quilt"))
             .using(project(":quilt"))
+
+        substitute(module("xyz.bluspring.knit-loader:knit-loader-common"))
+            .using(project(":"))
     }
 }
 
