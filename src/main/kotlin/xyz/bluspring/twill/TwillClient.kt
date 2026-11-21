@@ -73,7 +73,7 @@ class TwillClient : ClientModInitializer {
                     it.text("${color}$version")
                 }
                 if (TwillOverrides.instance.overrideName != null) {
-                    display.addFactToGroup(debugGroup, "Provider") {
+                    displayer.addFactToGroup(debugGroup, "Provider") {
                         val version = TwillOverrides.instance.overrideVersion
                         if (version != null) {
                             it.text("${TwillOverrides.instance.overrideName} ${determineVersionColor(version)}v${version}")
