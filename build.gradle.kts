@@ -131,6 +131,27 @@ tasks.jar {
     }
 }
 
+// configure the maven publication
+publishing {
+    publications {
+        create<MavenPublication>("mavenJava") {
+            artifactId = project.property("archives_base_name") as String
+            from(components["java"])
+        }
+    }
+
+    // See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
+    repositories {
+        maven("https://mvn.devos.one/releases") {
+            name = "devOS"
+            credentials {
+                username = System.getenv()["MAVEN_USER"]
+                password = System.getenv()["MAVEN_PASS"]
+            }
+        }
+    }
+}
+
 tasks {
     project.extensions.configure<ModPublishExtension>("publishMods") {
         file = project.tasks.named<Jar>("jar").get().archiveFile
@@ -209,27 +230,6 @@ tasks {
                 connection.responseCode != 200
             } catch (_: Exception) {
                 false
-            }
-        }
-    }
-}
-
-// configure the maven publication
-publishing {
-    publications {
-        create<MavenPublication>("mavenJava") {
-            artifactId = project.property("archives_base_name") as String
-            from(components["java"])
-        }
-    }
-
-    // See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
-    repositories {
-        maven("https://mvn.devos.one/releases") {
-            name = "devOS"
-            credentials {
-                username = System.getenv()["MAVEN_USER"]
-                password = System.getenv()["MAVEN_PASS"]
             }
         }
     }
