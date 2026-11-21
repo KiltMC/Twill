@@ -43,7 +43,7 @@ class TwillClient : ClientModInitializer {
     private fun determineVersionColor(version: String): String {
         return if (version.endsWith("-local"))
             "§c"
-        else if (version.contains("+build."))
+        else if (version.contains("build."))
             "§6"
         else
             "§b"

@@ -7,11 +7,12 @@ plugins {
     alias(libs.plugins.fabric.loom)
     alias(libs.plugins.fletching.table)
     `maven-publish`
+    alias(libs.plugins.mod.publish)
 }
 
 val fmlVersion = property("fml") as String
 
-version = "${rootProject.property("mod_version")}+${stonecutter.current.version}"
+version = "${createVersion()}+${stonecutter.current.version}${getVersionMetadata()}"
 group = rootProject.property("maven_group") as String
 
 base {
@@ -142,4 +143,64 @@ publishing {
         // The repositories here will be used for publishing your artifact, not for
         // retrieving dependencies.
     }
+}
+
+fun isRelease(): Boolean {
+    return rootProject.hasProperty("build.release")
+}
+
+fun createVersion(): String {
+    var newestVersion = "1.0.0"
+
+    for (tag in try {
+        val process = Runtime.getRuntime().exec(arrayOf("git", "tag"), emptyArray(), rootProject.projectDir)
+        process.inputReader().readLines()
+    } catch (e: Exception) {
+        e.printStackTrace()
+        emptyList()
+    }) {
+        // Select the highest increment available.
+        if (stonecutter.eval(tag.trim().removePrefix("v"), ">$newestVersion")) {
+            newestVersion = tag.trim().removePrefix("v")
+        }
+    }
+
+    // Bump the version accordingly
+    if (!isRelease()) {
+        val components = newestVersion.split(".")
+        val patchVersion = components[2].toInt() + 1
+        newestVersion = "${components[0]}.${components[1]}.$patchVersion"
+    }
+
+    val version = newestVersion
+
+    if (isRelease() && System.getenv("GITHUB_TAG") != null) {
+        val tag = System.getenv("GITHUB_TAG")
+        if (tag.lowercase().removePrefix("v") != version)
+            throw IllegalStateException("The tag created doesn't match the increment version! Are you incrementing it correctly? ($version != ${tag.lowercase().removePrefix("v")})")
+    }
+
+    return version
+}
+
+fun getVersionMetadata(): String {
+    if (isRelease())
+        return ""
+
+    val commitHash = System.getenv("GITHUB_SHA") ?: (try {
+        val process = Runtime.getRuntime().exec(arrayOf("git", "rev-parse", "--short", "HEAD"), emptyArray(), rootProject.projectDir)
+        process.inputReader().readLine().trim()
+    } catch (e: Exception) {
+        e.printStackTrace()
+        ""
+    })
+
+    return "-build.${commitHash.subSequence(0, 6)}${
+        if (System.getenv("GITHUB_RUN_NUMBER") == null) 
+            "-local" 
+        else if (!isRelease()) 
+            "-nightly" 
+        else 
+            ""
+    }"
 }

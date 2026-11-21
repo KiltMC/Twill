@@ -3,6 +3,9 @@
 fabric-loom = "1.19.+"
 fabric-loader = "0.20.1"
 
+# https://github.com/modmuss50/mod-publish-plugin/blob/main/build.gradle.kts
+mod-publish = "2.2.1"
+
 # https://stonecutter.kikugie.dev/
 stonecutter = "0.9.+"
 # https://stonecutter.kikugie.dev/wiki/fletching-table/setup
@@ -56,3 +59,4 @@ fabric-loom = { id = "net.fabricmc.fabric-loom", version.ref = "fabric-loom" }
 kotlin = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 fletching-table = { id = "dev.kikugie.fletching-table", version.ref = "fletching-table" }
 stonecutter = { id = "dev.kikugie.stonecutter" }
+mod-publish = { id = "me.modmuss50.mod-publish-plugin", version.ref = "mod-publish" }
