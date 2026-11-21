@@ -37,8 +37,3 @@ jobs:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASS: ${{ secrets.MAVEN_PASS }}
         run: ./gradlew publish -Pbuild.release=true
-      - name: Upload assets to GitHub
-        uses: AButler/upload-release-assets@v2.0
-        with:
-          files: 'build/libs/*.jar'
-          repo-token: ${{ secrets.GITHUB_TOKEN }}

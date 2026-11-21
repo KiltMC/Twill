@@ -31,8 +31,3 @@ jobs:
         cache-read-only: false
     - name: Build artifacts
       run: ./gradlew jar
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: Kilt Build JARs
-        path: build/libs/Kilt-*.jar
