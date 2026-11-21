@@ -158,6 +158,8 @@ publishing {
 }
 
 tasks {
+    val supportedVersions = (property("supported_versions") as String).split(",")
+
     project.extensions.configure<ModPublishExtension>("publishMods") {
         file = project.tasks.named<Jar>("jar").get().archiveFile
         displayName = "Twill v${project.version} (MC ${stonecutter.current.version})"
@@ -168,8 +170,6 @@ tasks {
 
         dryRun = providers.environmentVariable("MODRINTH_TOKEN").getOrNull() == null
             || providers.environmentVariable("CURSEFORGE_TOKEN").getOrNull() == null
-
-        val supportedVersions = (property("supported_versions") as String).split(",")
 
         modrinth {
             projectId = project.property("publishing.modrinth").toString()
@@ -212,7 +212,7 @@ tasks {
         }
     }
 
-    if (any { it.name.contains("publishCurseforge") }) {
+    if (supportedVersions.none { it.contains("-snapshot-") }) {
         named("publishCurseforge") {
             onlyIf {
                 try {
