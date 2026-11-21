@@ -70,6 +70,7 @@ dependencies {
     fmlProperties.load(rootProject.file("fml/v$fmlVersion/gradle.properties").inputStream())
     api(include("net.neoforged:bus:${fmlProperties.getProperty("eventbus_version")}")!!)
     api(include("net.neoforged:accesstransformers:${fmlProperties.getProperty("accesstransformers_version")}")!!)
+    api(include("net.neoforged.accesstransformers:at-parser:${fmlProperties.getProperty("accesstransformers_version")}")!!)
     api(include("net.neoforged:mergetool:${fmlProperties.getProperty("mergetool_version")}")!!)
     api(include("net.neoforged:JarJarSelector:${fmlProperties.getProperty("jarjar_version")}")!!)
     api(include("net.neoforged:JarJarMetadata:${fmlProperties.getProperty("jarjar_version")}")!!)
