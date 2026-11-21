@@ -348,7 +348,7 @@ open class TwillLoader : KnitModLoader<NeoForgeMod>("twill", "neoforge") {
                 Twill.logger.error("Could not parse fabric.mod.json in mod ${path.name}! Assuming it is a Twill mod stub.", e)
                 true
             }
-        } else true
+        } else TwillOverrides.instance.hasLaunchOverride
 
         // This mod isn't a Twill-supported mod JAR, we should skip it.
         if (!isTwillMod && parent == null)
