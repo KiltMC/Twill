@@ -146,7 +146,9 @@ open class TwillLoader : KnitModLoader<NeoForgeMod>("twill", "neoforge") {
                         "file" to this,
                     ),
                     loaderCustomData = mapOf(
-                        "badges" to listOf("library"), // force ModMenu to hide this
+                        "modmenu" to mapOf(
+                            "badges" to listOf("library"), // force ModMenu to hide this
+                        ),
                     ),
                     isBuiltin = isBuiltIn,
                     authors = (this.modFileInfo.config.getConfigElement<String>("authors")
