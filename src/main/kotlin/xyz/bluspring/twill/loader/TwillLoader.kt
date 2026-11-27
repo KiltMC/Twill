@@ -149,6 +149,9 @@ open class TwillLoader : KnitModLoader<NeoForgeMod>("twill", "neoforge") {
                         "badges" to listOf("library"), // force ModMenu to hide this
                     ),
                     isBuiltin = isBuiltIn,
+                    authors = (this.modFileInfo.config.getConfigElement<String>("authors")
+                        .orElse("") ?: "").replace("\r\n", "\n").split(",")
+                        .map { it.trim() },
                 )
             )
         }
@@ -156,7 +159,7 @@ open class TwillLoader : KnitModLoader<NeoForgeMod>("twill", "neoforge") {
         return this.modInfos.map { info ->
             ModDefinition(this.filePath, info.modId, info.displayName, info.description,
                 NeoForgeModVersion(info.version),
-                (this.modFileInfo.config.getConfigElement<String>("authors")
+                (info.config.getConfigElement<String>("authors")
                     .orElse("") ?: "").replace("\r\n", "\n").split(",")
                     .map { it.trim() },
                 this.modFileInfo.license,
